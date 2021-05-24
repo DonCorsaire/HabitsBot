@@ -6,19 +6,24 @@ using System.Linq;
 
 namespace PrivickerBot.Repositories
 {
-    class UserRepository
+    public class UserRepository
     {
-        readonly List<User> _users = new List<User>();
+        private readonly HabitContext _context;
+
+        public UserRepository()
+        {
+            _context = new HabitContext(); //rework with DI, right know dk best way to pass serviceProvider deeper;
+        }
 
         public User GetUser(int ChatId)
         {
-            return _users.FirstOrDefault(u => u.ChatId == ChatId);
+            return _context.Users.FirstOrDefault(u => u.ChatId == ChatId);
             
         }
 
         public bool UserExist(int ChatId)
         {
-            User result = _users.FirstOrDefault(u => u.ChatId == ChatId);
+            User result = _context.Users.FirstOrDefault(u => u.ChatId == ChatId);
             return result != null;
         }
 
@@ -32,14 +37,18 @@ namespace PrivickerBot.Repositories
                 ChatState = Enums.ChatState.Main
             };
 
-            _users.Add(user);
+            _context.Users.Add(user);
+            _context.SaveChanges();
         }
 
         public void UpdateUser(User userUpdated)
         {
-            User oldUser = _users.FirstOrDefault(u => u.ChatId == userUpdated.ChatId);
-            int index = _users.IndexOf(oldUser);
-            _users[index] = userUpdated;
+            User oldUser = _context.Users.FirstOrDefault(u => u.ChatId == userUpdated.ChatId);
+            oldUser.Name = userUpdated.Name;
+            oldUser.ChatState = userUpdated.ChatState;
+            oldUser.AddingHabitState = userUpdated.AddingHabitState;
+            _context.Entry(oldUser).State = System.Data.Entity.EntityState.Modified;
+            _context.SaveChanges();
             //implement Db and set entrystate modified for user. 
         }
     }

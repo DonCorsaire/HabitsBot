@@ -1,28 +1,28 @@
 ﻿using PrivickerBot.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 
 namespace PrivickerBot.Repositories
 {
-    class HabitRepository
+    public class HabitRepository
     {
-        readonly List<Habit> habits = new List<Habit>(); //replace with DB;
+        private readonly HabitContext _context;
 
-        static int currendId = 0;
-
-        public string[] GetList()
+        public HabitRepository()
         {
-            string[] result = habits.Select(h =>h.Id.ToString()+ " " + h.Name).ToArray();
-            return result;
+            _context = new HabitContext(); //rework with DI, right know dk best way to pass serviceProvider deeper;
+        }
+
+        public string[] GetList(int UserId)
+        {
+            return _context.Habits.Where(h => h.UserId == UserId).Select(h => h.Id.ToString() + " " + h.Name).ToArray();
         }
 
         public void AddHabit(CreateHabitModel model)
         {
             Habit habit = new Habit
             {
-                Id = currendId,
                 Name = model.Name,
                 Description = model.Description,
                 Period = model.Period,
@@ -31,22 +31,21 @@ namespace PrivickerBot.Repositories
                 UserId = model.UserId
                 
             };
-
-            habits.Add(habit);
-            currendId++;
+            _context.Habits.Add(habit);
+            _context.SaveChanges();
         }
 
         public Habit GetHabit(int id)
         {
-            return habits.FirstOrDefault(h => h.Id == id);
+            return _context.Habits.FirstOrDefault(h => h.Id == id);
         }
 
         public bool DeleteHabit(int id)
         {
-            Habit habit = habits.First(h => h.Id == id);
-            habits.Remove(habit);
+            Habit habit = _context.Habits.First(h => h.Id == id);
+            _context.Habits.Remove(habit);
+            _context.SaveChanges();
             return true;
         }
-
     }
 }

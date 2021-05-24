@@ -12,9 +12,15 @@ namespace PrivickerBot
 {
     public class CommandHandler
     {
-        private readonly HabitRepository _habitRepository = new HabitRepository();
-        private readonly UserRepository _userRepository = new UserRepository();
+        private readonly HabitRepository _habitRepository;
+        private readonly UserRepository _userRepository;
         CreateHabitModel habitModel;
+
+        public CommandHandler(HabitRepository habitRepository, UserRepository userRepository)
+        {
+            _habitRepository = habitRepository;
+            _userRepository = userRepository;
+        }
 
         public async Task ParseAndHandleAsync(Message msg)
         {
@@ -33,26 +39,24 @@ namespace PrivickerBot
                     if (msg.Text == "Просмотреть список")
                     {
                         StringBuilder sb = new StringBuilder();
-                        sb.AppendJoin('\n', _habitRepository.GetList());
+                        sb.AppendJoin('\n', _habitRepository.GetList(user.Id));
 
+                        ReplyKeyboardMarkup replyKeyboard = GetKeyboard(new string[] { "Просмотреть список", "Добавить новую привычку" });
 
-                        await Program.client.SendTextMessageAsync(msg.Chat.Id, "Habits List:\n" + sb.ToString() + "\n");
+                        await Program.client.SendTextMessageAsync(msg.Chat.Id, "Список привычек:\n" + sb.ToString() + "\n", replyMarkup: replyKeyboard);
                     }
                     else if (msg.Text == "Добавить новую привычку")
                     {
-
-                        await Program.client.SendTextMessageAsync(msg.Chat.Id, "Для создания привычки следуйте инструкциям:\nВведите название привычки");
                         user.ChatState = ChatState.AddingNewHabit;
                         user.AddingHabitState = AddingHabitState.NameInput;
                         _userRepository.UpdateUser(user);
                         habitModel = new CreateHabitModel();
+
+                        await Program.client.SendTextMessageAsync(msg.Chat.Id, "Для создания привычки следуйте инструкциям:\nВведите название привычки", replyMarkup: GetKeyboard(new string[] { "Отмена" }));
                     }
                     else
                     {
-                        ReplyKeyboardMarkup replyKeyboard = GetKeyboard(new string[] { "Просмотреть список", "Добавить новую привычку" });
-
-
-                        await Program.client.SendTextMessageAsync(msg.Chat.Id, "Привет, выбери действие", replyMarkup: replyKeyboard);
+                        ShowMainMenu(msg.Chat.Id);
                     }
 
                     break;
@@ -63,6 +67,7 @@ namespace PrivickerBot
                         habitModel = new CreateHabitModel();
                         user.ChatState = ChatState.Main;
                         _userRepository.UpdateUser(user);
+                        ShowMainMenu(msg.Chat.Id);
                         return;
                     }
                     switch (user.AddingHabitState)
@@ -70,33 +75,56 @@ namespace PrivickerBot
                         case AddingHabitState.NameInput:
                             habitModel.Name = msg.Text;
                             user.AddingHabitState = AddingHabitState.DescriptionInput;
-                            await Program.client.SendTextMessageAsync(msg.Chat.Id, "Введите описание привычки");
+                            await Program.client.SendTextMessageAsync(msg.Chat.Id,
+                                "Введите описание привычки",
+                                replyMarkup: GetKeyboard(new string[] { "Отмена" }));
                             break;
                         case AddingHabitState.DescriptionInput:
                             habitModel.Description = msg.Text;
                             user.AddingHabitState = AddingHabitState.PeriodInput;
-                            await Program.client.SendTextMessageAsync(msg.Chat.Id, "Введите периодичность занятия(в днях)");
+                            await Program.client.SendTextMessageAsync(msg.Chat.Id,
+                                "Введите периодичность занятия(в днях)",
+                                replyMarkup: GetKeyboard(new string[] { "Отмена" }));
                             break;
                         case AddingHabitState.PeriodInput:
-                            if(int.TryParse(msg.Text,out int value))
+                            if (int.TryParse(msg.Text, out int value))
                             {
-                                habitModel.Period = new TimeSpan(24 * int.Parse(msg.Text), 0, 0);
+                                habitModel.Period = value;
                                 user.AddingHabitState = AddingHabitState.NotificationTimeInput;
-                                await Program.client.SendTextMessageAsync(msg.Chat.Id, "Введите время для уведомления");
+                                await Program.client.SendTextMessageAsync(msg.Chat.Id,
+                                    "Введите время для уведомления",
+                                    replyMarkup: GetKeyboard(new string[] { "Отмена" }));
                             }
                             else
                             {
-                                await Program.client.SendTextMessageAsync(msg.Chat.Id, "Ошибка чтения, введите периодичность занятия(в днях)");
+                                await Program.client.SendTextMessageAsync(msg.Chat.Id,
+                                    "Ошибка чтения, введите периодичность занятия(в днях)",
+                                    replyMarkup: GetKeyboard(new string[] { "Отмена" }));
                             }
                             break;
                         case AddingHabitState.NotificationTimeInput:
+                            habitModel.NotificationTime = DateTime.Now;
                             user.AddingHabitState = AddingHabitState.Accepting;
-                            await Program.client.SendTextMessageAsync(msg.Chat.Id, "Подвердите или отмените добавление привычки (можно добавить вывод описания привычки", replyMarkup: GetKeyboard(new string[] {"Подтвердить", "Отмена" }));
+                            await Program.client.SendTextMessageAsync(msg.Chat.Id,
+                                "Подвердите или отмените добавление привычки (можно добавить вывод описания привычки",
+                                replyMarkup: GetKeyboard(new string[] { "Подтвердить", "Отмена" }));
                             break;
                         case AddingHabitState.Accepting:
-                            habitModel.UserId = user.Id;
-                            _habitRepository.AddHabit(habitModel);
-                            user.ChatState = ChatState.Main;
+                            if(msg.Text == "Подтвердить")
+                            {
+                                habitModel.UserId = user.Id;
+                                _habitRepository.AddHabit(habitModel);
+                                user.ChatState = ChatState.Main;
+                                ShowMainMenu(msg.Chat.Id);
+                            }
+                            else
+                            {
+                                await Program.client.SendTextMessageAsync(msg.Chat.Id,
+                               "Подвердите или отмените добавление привычки (можно добавить вывод описания привычки",
+                               replyMarkup: GetKeyboard(new string[] { "Подтвердить", "Отмена" }));
+                            }
+
+                            
                             break;
                         default:
                             _userRepository.UpdateUser(user);
@@ -128,6 +156,14 @@ namespace PrivickerBot
             };
 
             return replyKeyboard;
+        }
+
+        public async void ShowMainMenu(long id)
+        {
+            ReplyKeyboardMarkup replyKeyboard = GetKeyboard(new string[] { "Просмотреть список", "Добавить новую привычку" });
+
+
+            await Program.client.SendTextMessageAsync(id, "Привет, выбери действие", replyMarkup: replyKeyboard);
         }
 
         public string ParseCommand(string msg)
