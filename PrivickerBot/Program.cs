@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using Telegram.Bot;
-using Telegram.Bot.Types.ReplyMarkups;
 using Microsoft.Extensions.DependencyInjection;
 using PrivickerBot.Repositories;
 using PrivickerBot.Models;
@@ -25,7 +22,7 @@ namespace PrivickerBot
 
 
 
-            var configuration = new PrivickerBot.Migration.Configuration();
+            var configuration = new Migration.Configuration();
             DbMigrator migrator = new DbMigrator(configuration);
             var migrations = migrator.GetPendingMigrations();
 
@@ -40,12 +37,18 @@ namespace PrivickerBot
             client.OnMessage += BotOnMessageReceived;
 
             client.OnMessageEdited += BotOnMessageReceived;
+
+            client.OnCallbackQuery += BotOnCallbackReceived;
             client.StartReceiving();
             Console.ReadLine();
             client.StopReceiving();
         }
 
-
+        private static async void BotOnCallbackReceived(object sender, Telegram.Bot.Args.CallbackQueryEventArgs e)
+        {
+            var callback = e.CallbackQuery;
+            await commandHandler.HandleCallbackAsync(callback);
+        }
 
         private static async void BotOnMessageReceived(object sender, Telegram.Bot.Args.MessageEventArgs e)
         {

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Telegram.Bot.Types;
 using PrivickerBot.Models;
 using PrivickerBot.Enums;
+using PrivickerBot.Models.ViewModel;
 
 namespace PrivickerBot
 {
@@ -14,7 +15,7 @@ namespace PrivickerBot
     {
         private readonly HabitRepository _habitRepository;
         private readonly UserRepository _userRepository;
-        CreateHabitModel habitModel;
+        HabitCreateModel habitModel;
 
         public CommandHandler(HabitRepository habitRepository, UserRepository userRepository)
         {
@@ -38,19 +39,19 @@ namespace PrivickerBot
 
                     if (msg.Text == "Просмотреть список")
                     {
-                        StringBuilder sb = new StringBuilder();
-                        sb.AppendJoin('\n', _habitRepository.GetList(user.Id));
+                        //StringBuilder sb = new StringBuilder();
+                        //sb.AppendJoin('\n', _habitRepository.GetHabitStringsArray(user.Id));
+                        //ReplyKeyboardMarkup replyKeyboard = GetKeyboard(new string[] { "Просмотреть список", "Добавить новую привычку" });
+                        //await Program.client.SendTextMessageAsync(msg.Chat.Id, "Список привычек:\n" + sb.ToString() + "\n", replyMarkup: replyKeyboard);
 
-                        ReplyKeyboardMarkup replyKeyboard = GetKeyboard(new string[] { "Просмотреть список", "Добавить новую привычку" });
-
-                        await Program.client.SendTextMessageAsync(msg.Chat.Id, "Список привычек:\n" + sb.ToString() + "\n", replyMarkup: replyKeyboard);
+                        await Program.client.SendTextMessageAsync(msg.Chat.Id, "Список привычек:", replyMarkup: GenerateList(_habitRepository.GetHabitList(user.Id)));
                     }
                     else if (msg.Text == "Добавить новую привычку")
                     {
                         user.ChatState = ChatState.AddingNewHabit;
                         user.AddingHabitState = AddingHabitState.NameInput;
                         _userRepository.UpdateUser(user);
-                        habitModel = new CreateHabitModel();
+                        habitModel = new HabitCreateModel();
 
                         await Program.client.SendTextMessageAsync(msg.Chat.Id, "Для создания привычки следуйте инструкциям:\nВведите название привычки", replyMarkup: GetKeyboard(new string[] { "Отмена" }));
                     }
@@ -64,7 +65,7 @@ namespace PrivickerBot
 
                     if (msg.Text == "Отмена")
                     {
-                        habitModel = new CreateHabitModel();
+                        habitModel = new HabitCreateModel();
                         user.ChatState = ChatState.Main;
                         _userRepository.UpdateUser(user);
                         ShowMainMenu(msg.Chat.Id);
@@ -110,7 +111,7 @@ namespace PrivickerBot
                                 replyMarkup: GetKeyboard(new string[] { "Подтвердить", "Отмена" }));
                             break;
                         case AddingHabitState.Accepting:
-                            if(msg.Text == "Подтвердить")
+                            if (msg.Text == "Подтвердить")
                             {
                                 habitModel.UserId = user.Id;
                                 _habitRepository.AddHabit(habitModel);
@@ -124,7 +125,7 @@ namespace PrivickerBot
                                replyMarkup: GetKeyboard(new string[] { "Подтвердить", "Отмена" }));
                             }
 
-                            
+
                             break;
                         default:
                             _userRepository.UpdateUser(user);
@@ -134,10 +135,86 @@ namespace PrivickerBot
 
                     break;
                 case ChatState.EditingNewHabit:
+
+                    switch (user.EditingHabitState)
+                    {
+                        case EditingHabitState.Main:
+                            ReplyKeyboardMarkup keyboard = GetKeyboard(new string[] { "Название", "Описание", "Время уведомления", "Периодичность", "Сохранить", "Отмена" });
+                            break;
+                        case EditingHabitState.EditingName:
+                            break;
+                        case EditingHabitState.EditingDescription:
+                            break;
+                        case EditingHabitState.EditingNotificationTime:
+                            break;
+                        case EditingHabitState.EditingPeriod:
+                            break;
+                        default:
+                            break;
+                    }
+
+
+
                     break;
                 default:
                     break;
             }
+        }
+
+        public async Task HandleCallbackAsync(CallbackQuery callback)
+        {
+            if (callback.Data.StartsWith("/Get"))
+            {
+                int id = int.Parse(callback.Data.Replace("/Get ", ""));
+
+                InlineKeyboardButton editBtn = new InlineKeyboardButton
+                {
+                    CallbackData = "/Edit " + id,
+                    Text = "Изменить"
+                };
+
+                InlineKeyboardButton deleteBtn = new InlineKeyboardButton
+                {
+                    CallbackData = "/Delete " + id,
+                    Text = "Удалить"
+                };
+
+                await Program.client.SendTextMessageAsync(callback.From.Id,
+                                                          _habitRepository.GetHabit(id).ToString(),
+                                                          replyMarkup: new InlineKeyboardMarkup(new List<InlineKeyboardButton> { editBtn, deleteBtn }));
+            }
+            else if (callback.Data.StartsWith("/Edit"))
+            {
+                int id = int.Parse(callback.Data.Replace("/Edit ", ""));
+
+                await Program.client.SendTextMessageAsync(callback.From.Id,
+                                                          "Редактируем "+ _habitRepository.GetHabit(id).ToString());
+
+            }
+            else if (callback.Data.StartsWith("/Delete"))
+            {
+                int id = int.Parse(callback.Data.Replace("/Delete ", ""));
+
+                await Program.client.SendTextMessageAsync(callback.From.Id,
+                                                          "Удаляем " + _habitRepository.GetHabit(id).ToString());
+
+            }
+        }
+
+        public InlineKeyboardMarkup GenerateList(List<HabitViewModel> habitViewModels)
+        {
+            List<List<InlineKeyboardButton>> keyboard = new List<List<InlineKeyboardButton>>();
+
+            foreach (HabitViewModel habit in habitViewModels)
+            {
+                InlineKeyboardButton button = new InlineKeyboardButton
+                {
+                    Text = habit.Name,
+                    CallbackData = "/Get " + habit.Id
+                };
+                keyboard.Add(new List<InlineKeyboardButton>() { button });
+            }
+            return new InlineKeyboardMarkup(keyboard);
         }
 
         public ReplyKeyboardMarkup GetKeyboard(string[] values)
@@ -181,10 +258,6 @@ namespace PrivickerBot
             else if (msg.StartsWith("/edit"))
             {
                 return "not implemented";
-            }
-            else if (msg.StartsWith("/help"))
-            {
-                return "/add Habit_name habit_description Repeat_days Notification_time \n/list \n/delete Habit_id";
             }
             else
             {

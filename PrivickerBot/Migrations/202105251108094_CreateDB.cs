@@ -3,7 +3,7 @@
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class CreateDb : DbMigration
+    public partial class CreateDB : DbMigration
     {
         public override void Up()
         {
@@ -29,6 +29,7 @@
                         ChatId = c.Int(nullable: false),
                         Name = c.String(),
                         AddingHabitState = c.Int(nullable: false),
+                        EditingHabitState = c.Int(nullable: false),
                         ChatState = c.Int(nullable: false),
                     })
                 .PrimaryKey(t => t.Id);

@@ -34,6 +34,7 @@ namespace PrivickerBot.Repositories
                 ChatId = ChatId,
                 Name = name,
                 AddingHabitState = Enums.AddingHabitState.NameInput,
+                EditingHabitState = Enums.EditingHabitState.Main,
                 ChatState = Enums.ChatState.Main
             };
 
@@ -47,9 +48,9 @@ namespace PrivickerBot.Repositories
             oldUser.Name = userUpdated.Name;
             oldUser.ChatState = userUpdated.ChatState;
             oldUser.AddingHabitState = userUpdated.AddingHabitState;
+            oldUser.EditingHabitState = userUpdated.EditingHabitState;
             _context.Entry(oldUser).State = System.Data.Entity.EntityState.Modified;
             _context.SaveChanges();
-            //implement Db and set entrystate modified for user. 
         }
     }
 }

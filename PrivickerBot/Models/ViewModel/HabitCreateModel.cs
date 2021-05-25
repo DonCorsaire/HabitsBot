@@ -4,9 +4,8 @@ using System.Text;
 
 namespace PrivickerBot.Models
 {
-    public class Habit
+    public class HabitCreateModel
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
 

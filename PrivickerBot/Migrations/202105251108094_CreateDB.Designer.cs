@@ -7,13 +7,13 @@ namespace PrivickerBot.Migration
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.4.4")]
-    public sealed partial class CreateDb : IMigrationMetadata
+    public sealed partial class CreateDB : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(CreateDb));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(CreateDB));
         
         string IMigrationMetadata.Id
         {
-            get { return "202105240915078_CreateDb"; }
+            get { return "202105251108094_CreateDB"; }
         }
         
         string IMigrationMetadata.Source
