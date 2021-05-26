@@ -1,12 +1,11 @@
 ﻿using PrivickerBot.Repositories;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
-using PrivickerBot.Models;
-using PrivickerBot.Enums;
+using PrivickerBot.DAL.Enums;
+using PrivickerBot.DAL.Models;
 using PrivickerBot.Models.ViewModel;
 
 namespace PrivickerBot
@@ -25,7 +24,7 @@ namespace PrivickerBot
 
         public async Task ParseAndHandleAsync(Message msg)
         {
-            Models.User user;
+            DAL.Models.User user;
             if (!_userRepository.UserExist(msg.From.Id))
             {
                 _userRepository.CreateUser(msg.From.Id, msg.From.FirstName + " " + msg.From.LastName);
@@ -59,7 +58,6 @@ namespace PrivickerBot
                     {
                         ShowMainMenu(msg.Chat.Id);
                     }
-
                     break;
                 case ChatState.AddingNewHabit:
 
@@ -113,26 +111,22 @@ namespace PrivickerBot
                         case AddingHabitState.Accepting:
                             if (msg.Text == "Подтвердить")
                             {
+                                user.ChatState = ChatState.Main;
                                 habitModel.UserId = user.Id;
                                 _habitRepository.AddHabit(habitModel);
-                                user.ChatState = ChatState.Main;
                                 ShowMainMenu(msg.Chat.Id);
                             }
                             else
                             {
+                                user.ChatState = ChatState.Main;
                                 await Program.client.SendTextMessageAsync(msg.Chat.Id,
                                "Подвердите или отмените добавление привычки (можно добавить вывод описания привычки",
                                replyMarkup: GetKeyboard(new string[] { "Подтвердить", "Отмена" }));
                             }
-
-
                             break;
                         default:
-                            _userRepository.UpdateUser(user);
                             break;
-
                     }
-
                     break;
                 case ChatState.EditingNewHabit:
 
@@ -152,13 +146,11 @@ namespace PrivickerBot
                         default:
                             break;
                     }
-
-
-
                     break;
                 default:
                     break;
             }
+            _userRepository.UpdateUser(user);
         }
 
         public async Task HandleCallbackAsync(CallbackQuery callback)
@@ -183,20 +175,40 @@ namespace PrivickerBot
                                                           _habitRepository.GetHabit(id).ToString(),
                                                           replyMarkup: new InlineKeyboardMarkup(new List<InlineKeyboardButton> { editBtn, deleteBtn }));
             }
+            else if (callback.Data.StartsWith("/Delete"))
+            {
+                int id = int.Parse(callback.Data.Replace("/Delete ", ""));
+
+                InlineKeyboardButton yesBtn = new InlineKeyboardButton
+                {
+                    CallbackData = "/Remove " + id,
+                    Text = "Да"
+                };
+
+                InlineKeyboardButton noBtn = new InlineKeyboardButton
+                {
+                    CallbackData = "/Get " + id,
+                    Text = "Нет"
+                };
+
+                await Program.client.SendTextMessageAsync(callback.From.Id,
+                                                          "Вы действительно хотите удалить привычку " + _habitRepository.GetHabit(id).Name + "?",
+                                                          replyMarkup: new InlineKeyboardMarkup(new List<InlineKeyboardButton> { yesBtn, noBtn }));
+
+            }
+            else if (callback.Data.StartsWith("/Remove"))
+            {
+                int id = int.Parse(callback.Data.Replace("/Remove ", ""));
+                _habitRepository.DeleteHabit(id);
+                ShowMainMenu(callback.From.Id);
+            }
+
             else if (callback.Data.StartsWith("/Edit"))
             {
                 int id = int.Parse(callback.Data.Replace("/Edit ", ""));
 
                 await Program.client.SendTextMessageAsync(callback.From.Id,
-                                                          "Редактируем "+ _habitRepository.GetHabit(id).ToString());
-
-            }
-            else if (callback.Data.StartsWith("/Delete"))
-            {
-                int id = int.Parse(callback.Data.Replace("/Delete ", ""));
-
-                await Program.client.SendTextMessageAsync(callback.From.Id,
-                                                          "Удаляем " + _habitRepository.GetHabit(id).ToString());
+                                                          "Редактируем " + _habitRepository.GetHabit(id).ToString());
 
             }
         }
@@ -245,17 +257,7 @@ namespace PrivickerBot
 
         public string ParseCommand(string msg)
         {
-            if (msg.StartsWith("/delete"))
-            {
-                _habitRepository.DeleteHabit(int.Parse(msg.Split(' ')[1]));
-                return "Habit " + msg.Split(' ')[1] + " removed.";
-            }
-            else if (msg.StartsWith("/check"))
-            {
-                var result = _habitRepository.GetHabit(int.Parse(msg.Split(' ')[1]));
-                return result.ToString();
-            }
-            else if (msg.StartsWith("/edit"))
+           if (msg.StartsWith("/edit"))
             {
                 return "not implemented";
             }

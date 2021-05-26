@@ -3,7 +3,7 @@ using System.Data.Entity.Migrations;
 using Telegram.Bot;
 using Microsoft.Extensions.DependencyInjection;
 using PrivickerBot.Repositories;
-using PrivickerBot.Models;
+using PrivickerBot.DAL.Models;
 
 namespace PrivickerBot
 {
@@ -22,7 +22,7 @@ namespace PrivickerBot
 
 
 
-            var configuration = new Migration.Configuration();
+            var configuration = new DAL.Migration.Configuration();
             DbMigrator migrator = new DbMigrator(configuration);
             var migrations = migrator.GetPendingMigrations();
 

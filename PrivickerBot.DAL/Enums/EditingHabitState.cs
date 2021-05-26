@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PrivickerBot.Enums
+namespace PrivickerBot.DAL.Enums
 {
     public enum EditingHabitState
     {

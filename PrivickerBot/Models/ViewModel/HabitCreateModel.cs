@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PrivickerBot.Models
+namespace PrivickerBot.Models.ViewModel
 {
     public class HabitCreateModel
     {

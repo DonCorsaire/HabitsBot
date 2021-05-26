@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
+using PrivickerBot.DAL.Models;
 
 namespace PrivickerBot.Models.ViewModel
 {

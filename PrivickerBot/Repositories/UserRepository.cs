@@ -1,8 +1,10 @@
-﻿using PrivickerBot.Models;
+﻿using PrivickerBot.DAL.Enums;
+using PrivickerBot.DAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+
 
 namespace PrivickerBot.Repositories
 {
@@ -33,9 +35,9 @@ namespace PrivickerBot.Repositories
             {
                 ChatId = ChatId,
                 Name = name,
-                AddingHabitState = Enums.AddingHabitState.NameInput,
-                EditingHabitState = Enums.EditingHabitState.Main,
-                ChatState = Enums.ChatState.Main
+                AddingHabitState = AddingHabitState.NameInput,
+                EditingHabitState = EditingHabitState.Main,
+                ChatState = ChatState.Main
             };
 
             _context.Users.Add(user);

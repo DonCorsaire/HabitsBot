@@ -1,4 +1,4 @@
-﻿using PrivickerBot.Models;
+﻿using PrivickerBot.DAL.Models;
 using PrivickerBot.Models.ViewModel;
 using System;
 using System.Collections.Generic;

@@ -15,4 +15,8 @@
     <PackageReference Include="Telegram.Bot" Version="15.7.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PrivickerBot.DAL\PrivickerBot.DAL.csproj" />
+  </ItemGroup>
+
 </Project>

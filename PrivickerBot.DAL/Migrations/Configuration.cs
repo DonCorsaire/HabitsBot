@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Text;
-using PrivickerBot.Models;
+using PrivickerBot.DAL.Models;
 
-namespace PrivickerBot.Migration
+namespace PrivickerBot.DAL.Migration
 {
-    class Configuration : DbMigrationsConfiguration<HabitContext>
+    public class Configuration : DbMigrationsConfiguration<HabitContext>
     {
         public Configuration()
         {

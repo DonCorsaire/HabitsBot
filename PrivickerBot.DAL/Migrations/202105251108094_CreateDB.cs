@@ -1,4 +1,4 @@
-﻿namespace PrivickerBot.Migration
+﻿namespace PrivickerBot.DAL.Migration
 {
     using System;
     using System.Data.Entity.Migrations;

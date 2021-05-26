@@ -1,9 +1,9 @@
-﻿using PrivickerBot.Enums;
+﻿using PrivickerBot.DAL.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace PrivickerBot.Models
+namespace PrivickerBot.DAL.Models
 {
     public class User
     {
