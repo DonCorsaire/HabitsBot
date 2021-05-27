@@ -11,10 +11,9 @@ namespace PrivickerBot.Repositories
     public class UserRepository
     {
         private readonly HabitContext _context;
-
-        public UserRepository()
+        public UserRepository(HabitContext dbContext)
         {
-            _context = new HabitContext(); //rework with DI, right know dk best way to pass serviceProvider deeper;
+            _context = dbContext;
         }
 
         public User GetUser(int ChatId)

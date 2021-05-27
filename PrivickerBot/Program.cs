@@ -1,27 +1,19 @@
 ﻿using System;
 using System.Data.Entity.Migrations;
 using Telegram.Bot;
-using Microsoft.Extensions.DependencyInjection;
 using PrivickerBot.Repositories;
 using PrivickerBot.DAL.Models;
+using PrivickerBot.Services;
 
 namespace PrivickerBot
 {
     class Program
     {
-        public static TelegramBotClient client;
-        private static CommandHandler commandHandler;
+        public static ITelegramBotClient _botClient;
+        private static BotClientService _BotClientService;
 
         static void Main(string[] args)
         {
-            var serviceProvider = new ServiceCollection()
-                .AddScoped<UserRepository>()
-                .AddScoped<HabitRepository>()
-                .AddScoped<HabitContext>()
-                .BuildServiceProvider();
-
-
-
             var configuration = new DAL.Migration.Configuration();
             DbMigrator migrator = new DbMigrator(configuration);
             var migrations = migrator.GetPendingMigrations();
@@ -31,32 +23,14 @@ namespace PrivickerBot
                 migrator.Update(migration);
             }
 
+            _botClient = new TelegramBotClient("youradmaybehere");
 
-            client = new TelegramBotClient("youradmaybehere");
-            commandHandler = new CommandHandler( serviceProvider.GetService<HabitRepository>(), serviceProvider.GetService<UserRepository>() );
-            client.OnMessage += BotOnMessageReceived;
+            _BotClientService = new BotClientService(_botClient);
+            _botClient.OnUpdate += _BotClientService.BotClientUpdateHandle;
+            _botClient.StartReceiving();
 
-            client.OnMessageEdited += BotOnMessageReceived;
-
-            client.OnCallbackQuery += BotOnCallbackReceived;
-            client.StartReceiving();
             Console.ReadLine();
-            client.StopReceiving();
-        }
-
-        private static async void BotOnCallbackReceived(object sender, Telegram.Bot.Args.CallbackQueryEventArgs e)
-        {
-            var callback = e.CallbackQuery;
-            await commandHandler.HandleCallbackAsync(callback);
-        }
-
-        private static async void BotOnMessageReceived(object sender, Telegram.Bot.Args.MessageEventArgs e)
-        {
-            var message = e.Message;
-            if (message?.Type == Telegram.Bot.Types.Enums.MessageType.Text)
-            {
-                await commandHandler.ParseAndHandleAsync(e.Message);
-            }
+            _botClient.StopReceiving();
         }
     }
 }

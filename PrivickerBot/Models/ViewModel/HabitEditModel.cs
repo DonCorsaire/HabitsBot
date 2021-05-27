@@ -11,5 +11,14 @@ namespace PrivickerBot.Models.ViewModel
         public string Description { get; set; }
         public int Period { get; set; }
         public DateTime NotificationTime { get; set; }
+
+        public override string ToString()
+        {
+            string result = "Текущее имя привычки: " + Name 
+                            + "\nТекущее описание: " + Description
+                            + "\nПериодичность: " + Period.ToString()
+                            + "\nВремя для напоминания: " + NotificationTime.ToShortTimeString();
+            return result;
+        }
     }
 }

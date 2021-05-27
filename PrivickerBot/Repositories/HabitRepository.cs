@@ -2,7 +2,9 @@
 using PrivickerBot.Models.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace PrivickerBot.Repositories
 {
@@ -10,9 +12,9 @@ namespace PrivickerBot.Repositories
     {
         private readonly HabitContext _context;
 
-        public HabitRepository()
+        public HabitRepository(HabitContext dbContext)
         {
-            _context = new HabitContext(); //rework with DI, right know dk best way to pass serviceProvider deeper;
+            _context = dbContext;
         }
 
         public List<HabitViewModel> GetHabitList(int UserId)
@@ -42,9 +44,9 @@ namespace PrivickerBot.Repositories
             _context.SaveChanges();
         }
 
-        public HabitViewModel GetHabit(int id)
+        public async Task<HabitViewModel> GetHabit(int id)
         {
-            Habit habit = _context.Habits.FirstOrDefault(h => h.Id == id);
+            Habit habit = await _context.Habits.FirstOrDefaultAsync(h => h.Id == id);
             HabitViewModel viewModel = new HabitViewModel
             {
                 Name = habit.Name,
