@@ -28,7 +28,7 @@ namespace PrivickerBot.Repositories
             return GetHabitList(UserId).Select(h => h.Name).ToArray();
         }
 
-        public void AddHabit(HabitCreateModel model)
+        public async Task AddHabit(HabitCreateModel model)
         {
             Habit habit = new Habit
             {
@@ -41,7 +41,7 @@ namespace PrivickerBot.Repositories
 
             };
             _context.Habits.Add(habit);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
         public async Task<HabitViewModel> GetHabit(int id)
@@ -58,9 +58,9 @@ namespace PrivickerBot.Repositories
             return viewModel;
         }
 
-        public HabitEditModel GetEditHabitModel(int id)
+        public async Task<HabitEditModel> GetEditHabitModel(int id)
         {
-            Habit habit = _context.Habits.FirstOrDefault(h => h.Id == id);
+            Habit habit = await _context.Habits.FirstOrDefaultAsync(h => h.Id == id);
             HabitEditModel result = new HabitEditModel
             {
                 Id = habit.Id,
@@ -72,21 +72,21 @@ namespace PrivickerBot.Repositories
             return result;
         }
 
-        public void EditHabit(HabitEditModel model)
+        public async Task EditHabit(HabitEditModel model)
         {
             Habit habit = _context.Habits.FirstOrDefault(h => h.Id == model.Id);
             habit.Name = model.Name;
             habit.Description = model.Description;
             habit.NotificationTime = model.NotificationTime;
             _context.Entry(habit).State = System.Data.Entity.EntityState.Modified;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public bool DeleteHabit(int id)
+        public async Task<bool> DeleteHabit(int id)
         {
-            Habit habit = _context.Habits.First(h => h.Id == id);
+            Habit habit = await _context.Habits.FirstAsync(h => h.Id == id);
             _context.Habits.Remove(habit);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return true;
         }
     }

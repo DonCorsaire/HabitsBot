@@ -4,9 +4,10 @@ using System.Text;
 
 namespace PrivickerBot.DAL.Models
 {
-    public class Habit
+    public class AddEditSession
     {
         public int Id { get; set; }
+        public int HabitId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public DateTime Started { get; set; }

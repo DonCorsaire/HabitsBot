@@ -14,14 +14,16 @@ namespace PrivickerBot.Services
         private readonly ITelegramBotClient _botClient;
         private readonly UserRepository _userRepository;
         private readonly HabitRepository _habitRepository;
+        private readonly SessionRepository _sessionRepository;
 
-        HabitCreateModel habitCreateModel;
+        
 
         public MessageService(ITelegramBotClient botClient, HabitContext dbContext)
         {
             _botClient = botClient;
             _userRepository = new UserRepository(dbContext);
             _habitRepository = new HabitRepository(dbContext);
+            _sessionRepository = new SessionRepository(dbContext);
         }
 
         public async Task HandleMessage(Message message)
@@ -32,12 +34,13 @@ namespace PrivickerBot.Services
             switch (user.ChatState)
             {
                 case ChatState.Main:
-                    await MainMenuHandle(message, user);
+                    await MainMenuStateHandle(message, user);
                     break;
                 case ChatState.AddingNewHabit:
-                    await AddingHabitHandle(message, user);
+                    await AddingHabitStateHandle(message, user);
                     break;
                 case ChatState.EditingNewHabit:
+                    await EditHabitStateHandle(message, user);
                     break;
                 default:
                     break;
@@ -53,7 +56,7 @@ namespace PrivickerBot.Services
             await _botClient.SendTextMessageAsync(message.Chat.Id, "Ответка через MessageService");
         }
 
-        async Task MainMenuHandle(Message message, DAL.Models.User user)
+        async Task MainMenuStateHandle(Message message, DAL.Models.User user)
         {
             if (message.Text == "Просмотреть список")
             {
@@ -64,7 +67,6 @@ namespace PrivickerBot.Services
             else if (message.Text == "Добавить привычку")
             {
                 user.ChatState = ChatState.AddingNewHabit;
-                habitCreateModel = new HabitCreateModel();
                 _userRepository.UpdateUser(user);
                 await _botClient.SendTextMessageAsync(message.From.Id,
                                                         "Введите название привычки:",
@@ -76,7 +78,12 @@ namespace PrivickerBot.Services
             }
         }
 
-        async Task AddingHabitHandle(Message message, DAL.Models.User user)
+        async Task EditHabitStateHandle(Message message, DAL.Models.User user)
+        {
+            await _botClient.SendTextMessageAsync(message.From.Id, "Список привычек:");
+        }
+
+        async Task AddingHabitStateHandle(Message message, DAL.Models.User user)
         {
             if (message.Text == "Отмена")
             {
@@ -93,14 +100,14 @@ namespace PrivickerBot.Services
             switch (user.AddingHabitState)
             {
                 case AddingHabitState.NameInput:
-                    habitCreateModel.Name = message.Text;
+                    await _sessionRepository.SetHabitName(message.Text, user, true);
                     user.AddingHabitState = AddingHabitState.DescriptionInput;
                     await _botClient.SendTextMessageAsync(message.From.Id,
                                                             "Введите описание привычки:",
                                                             replyMarkup: Helpers.GetKeyboard(new string[] { "Отмена" }));
                     break;
                 case AddingHabitState.DescriptionInput:
-                    habitCreateModel.Description = message.Text;
+                    await _sessionRepository.SetHabitDescription(message.Text, user);
                     user.AddingHabitState = AddingHabitState.PeriodInput;
                     await _botClient.SendTextMessageAsync(message.From.Id,
                                                             "Введите периодичность(в днях):",
@@ -109,7 +116,7 @@ namespace PrivickerBot.Services
                 case AddingHabitState.PeriodInput:
                     if (int.TryParse(message.Text, out int value))
                     {
-                        habitCreateModel.Period = value;
+                        await _sessionRepository.SetHabitPeriod(value, user);
                         user.AddingHabitState = AddingHabitState.NotificationTimeInput;
                         await _botClient.SendTextMessageAsync(message.From.Id,
                                                                 "Введите время напоминания:", 
@@ -123,7 +130,7 @@ namespace PrivickerBot.Services
                     }
                     break;
                 case AddingHabitState.NotificationTimeInput:
-                    habitCreateModel.NotificationTime = DateTime.Now; //TO-DO normal parser for time.
+                    await _sessionRepository.SetHabitNotificationTime(DateTime.Now, user); //TO-DO normal parser for time.
                     user.AddingHabitState = AddingHabitState.Accepting;
                     await Program._botClient.SendTextMessageAsync(message.From.Id,
                                                                 "Подвердите или отмените добавление привычки (можно добавить вывод описания привычки",
@@ -133,8 +140,7 @@ namespace PrivickerBot.Services
                     if (message.Text == "Подтвердить")
                     {
                         user.ChatState = ChatState.Main;
-                        habitCreateModel.UserId = user.Id;
-                        _habitRepository.AddHabit(habitCreateModel);
+                        await _habitRepository.AddHabit(await _sessionRepository.GetHabitCreateModel(user));
                         await Helpers.ShowMainMenu(message.From.Id);
                     }
                     else

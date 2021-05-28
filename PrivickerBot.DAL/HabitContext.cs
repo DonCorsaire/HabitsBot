@@ -9,6 +9,7 @@ namespace PrivickerBot.DAL.Models
     {
         public DbSet<Habit> Habits { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<AddEditSession> Sessions { get; set; }
 
         public HabitContext() : base("HabitContext")
         {
