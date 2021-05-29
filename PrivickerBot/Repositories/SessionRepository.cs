@@ -10,34 +10,58 @@ namespace PrivickerBot.Repositories
 {
     class SessionRepository
     {
-        HabitContext _context;
+        private readonly HabitContext _context;
 
         public SessionRepository(HabitContext dbContext)
         {
             _context = dbContext;
         }
 
+        public async Task CreateInputSession(User user)
+        {
+            InputSession model = new InputSession {  UserId = user.FromId};
+            _context.Sessions.Add(model);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<InputSession> GetEditSession(User user, HabitEditModel editModel)
+        {
+            InputSession session = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
+
+            session.HabitId = editModel.Id;
+            session.Name = editModel.Name;
+            session.LastExercise = editModel.LastExercise;
+            session.Description = editModel.Description;
+            session.NotificationTime = session.NotificationTime;
+            session.Period = session.Period;
+            session.Started = session.Started;
+
+            _context.Entry(session).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return session;
+        }
+
+
         public async Task SetHabitName(string name, User user, bool adding = false)
         {
+            InputSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
             if (adding)
             {
-                AddEditSession model = new AddEditSession();
-                model.UserId = user.Id;
-                model.Name = name;
-                _context.Sessions.Add(model);
+                model.HabitId = default;
+                model.Description = default;
+                model.LastExercise = default;
+                model.NotificationTime = default;
+                model.Period = default;
+                model.Started = default;
             }
-            else
-            {
-                AddEditSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
-                model.Name = name;
-                _context.Entry(model).State = EntityState.Modified;
-            }
+            model.Name = name;
+            _context.Entry(model).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
         public async Task SetHabitDescription(string description, User user)
         {
-            AddEditSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            InputSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
             model.Description = description;
             _context.Entry(model).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -45,7 +69,7 @@ namespace PrivickerBot.Repositories
 
         public async Task SetHabitPeriod(int period, User user)
         {
-            AddEditSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            InputSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
             model.Period = period;
             _context.Entry(model).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -53,7 +77,7 @@ namespace PrivickerBot.Repositories
 
         public async Task SetHabitNotificationTime(DateTime notificationTime, User user)
         {
-            AddEditSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            InputSession model =  await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
             model.NotificationTime = notificationTime;
             _context.Entry(model).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -61,7 +85,7 @@ namespace PrivickerBot.Repositories
 
         public async Task<HabitCreateModel> GetHabitCreateModel(User user)
         {
-            AddEditSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            InputSession model = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
             HabitCreateModel result = new HabitCreateModel
             {
                 Name = model.Name,
@@ -73,6 +97,5 @@ namespace PrivickerBot.Repositories
             };
             return result;
         }
-
     }
 }

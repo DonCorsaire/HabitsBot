@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Data.Entity;
+﻿using System.Data.Entity;
 
 namespace PrivickerBot.DAL.Models
 {
@@ -9,7 +6,7 @@ namespace PrivickerBot.DAL.Models
     {
         public DbSet<Habit> Habits { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<AddEditSession> Sessions { get; set; }
+        public DbSet<InputSession> Sessions { get; set; }
 
         public HabitContext() : base("HabitContext")
         {

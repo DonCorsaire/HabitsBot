@@ -4,7 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-
+using System.Threading.Tasks;
+using System.Data.Entity;
 
 namespace PrivickerBot.Repositories
 {
@@ -16,36 +17,37 @@ namespace PrivickerBot.Repositories
             _context = dbContext;
         }
 
-        public User GetUser(int ChatId)
+        public async Task<User> GetUser(int ChatId)
         {
-            return _context.Users.FirstOrDefault(u => u.ChatId == ChatId);
+            return await _context.Users.FirstOrDefaultAsync(u => u.FromId == ChatId);
             
         }
 
-        public bool UserExist(int ChatId)
+        public async Task<bool> UserExist(int ChatId)
         {
-            User result = _context.Users.FirstOrDefault(u => u.ChatId == ChatId);
+            User result = await _context.Users.FirstOrDefaultAsync(u => u.FromId == ChatId);
             return result != null;
         }
 
-        public void CreateUser(int ChatId, string name)
+        public async Task<User> CreateUser(int ChatId, string name)
         {
             User user = new User
             {
-                ChatId = ChatId,
+                FromId = ChatId,
                 Name = name,
                 AddingHabitState = AddingHabitState.NameInput,
                 EditingHabitState = EditingHabitState.Main,
                 ChatState = ChatState.Main
             };
 
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            User result = _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return result;
         }
 
         public void UpdateUser(User userUpdated)
         {
-            User oldUser = _context.Users.FirstOrDefault(u => u.ChatId == userUpdated.ChatId);
+            User oldUser = _context.Users.FirstOrDefault(u => u.FromId == userUpdated.FromId);
             oldUser.Name = userUpdated.Name;
             oldUser.ChatState = userUpdated.ChatState;
             oldUser.AddingHabitState = userUpdated.AddingHabitState;

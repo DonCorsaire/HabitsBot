@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PrivickerBot.DAL.Models
 {
-    public class AddEditSession
+    public class InputSession
     {
         public int Id { get; set; }
         public int HabitId { get; set; }

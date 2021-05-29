@@ -28,8 +28,16 @@ namespace PrivickerBot.Services
 
         public async Task HandleMessage(Message message)
         {
-            DAL.Models.User user = _userRepository.GetUser(message.From.Id);
-            //TO-DO check user exist or not;
+            DAL.Models.User user;
+            if (!_userRepository.UserExist(message.From.Id).Result)
+            {
+                user = await _userRepository.CreateUser(message.From.Id, message.From.FirstName + " " + message.From.LastName);
+                await _sessionRepository.CreateInputSession(user);
+            }
+            else
+            {
+                user = await _userRepository.GetUser(message.From.Id);
+            }
 
             switch (user.ChatState)
             {

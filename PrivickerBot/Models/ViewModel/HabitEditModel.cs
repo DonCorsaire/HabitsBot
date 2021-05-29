@@ -11,6 +11,8 @@ namespace PrivickerBot.Models.ViewModel
         public string Description { get; set; }
         public int Period { get; set; }
         public DateTime NotificationTime { get; set; }
+        
+        public DateTime LastExercise { get; set; }
 
         public override string ToString()
         {

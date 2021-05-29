@@ -15,7 +15,7 @@ namespace PrivickerBot.DAL.Migration
 
         protected override void Seed(HabitContext context)
         {
-            User user = new User { ChatId = 192064694, AddingHabitState = 0, ChatState = 0, Name = "Safarali Aslanbekov" };
+            User user = new User { FromId = 192064694, AddingHabitState = 0, ChatState = 0, Name = "Safarali Aslanbekov" };
             context.Users.Add(user);
             List<Habit> habits = new List<Habit>
             {

@@ -86,17 +86,15 @@ namespace PrivickerBot.Services
         private async Task EditHabitView()
         {
             //TO-DO
-            DAL.Models.User user = _userRepository.GetUser(_callback.From.Id);
+            DAL.Models.User user = await _userRepository.GetUser(_callback.From.Id);
 
-            var habitEditModel = _habitRepository.GetEditHabitModel(habitId);
+            HabitEditModel habitEditModel = await _habitRepository.GetEditHabitModel(habitId);
             user.EditingHabitState = EditingHabitState.Main;
             user.ChatState = ChatState.EditingNewHabit;
 
-            //ShowMainEditMenu(_callback.From.Id);
+            await Helpers.ShowMainEditMenu(_callback.From.Id, habitEditModel);
 
             _userRepository.UpdateUser(user);
-
-            await _botClient.SendTextMessageAsync(_callback.From.Id, "EditHabitView через CallbackQueryService\n");
         }
 
         private async Task DeleteHabitView()
@@ -122,7 +120,7 @@ namespace PrivickerBot.Services
 
         private async Task RemoveHabitView()
         {
-            _habitRepository.DeleteHabit(habitId);
+            await _habitRepository.DeleteHabit(habitId);
 
             //TO-DO return UI to mainMenu
             await _botClient.SendTextMessageAsync(_callback.From.Id, "RemoveHabitView через CallbackQueryService");
@@ -130,7 +128,7 @@ namespace PrivickerBot.Services
 
         private async Task CancelView()
         {
-            DAL.Models.User user = _userRepository.GetUser(_callback.From.Id);
+            DAL.Models.User user = await _userRepository.GetUser(_callback.From.Id);
 
             user.AddingHabitState = 0;
             user.ChatState = 0;

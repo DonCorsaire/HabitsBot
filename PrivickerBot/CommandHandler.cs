@@ -25,12 +25,12 @@ namespace PrivickerBot
         public async Task ParseAndHandleAsync(Message msg)
         {
             DAL.Models.User user;
-            if (!_userRepository.UserExist(msg.From.Id))
+            if (!_userRepository.UserExist(msg.From.Id).Result)
             {
-                _userRepository.CreateUser(msg.From.Id, msg.From.FirstName + " " + msg.From.LastName);
+                await _userRepository.CreateUser(msg.From.Id, msg.From.FirstName + " " + msg.From.LastName);
             }
 
-            user = _userRepository.GetUser(msg.From.Id);
+            user = await _userRepository.GetUser(msg.From.Id);
 
             if(msg.Text == "Просмотреть список")
             {

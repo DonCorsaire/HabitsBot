@@ -43,12 +43,41 @@ namespace PrivickerBot
             return replyKeyboard;
         }
 
-        public static async Task ShowMainMenu(long id)
+        public static async Task ShowMainMenu(long UserFromId)
         {
             ReplyKeyboardMarkup replyKeyboard = GetKeyboard(new string[] { "Просмотреть список", "Добавить новую привычку" });
 
 
-            await Program._botClient.SendTextMessageAsync(id, "Привет, выбери действие", replyMarkup: replyKeyboard);
+            await Program._botClient.SendTextMessageAsync(UserFromId, "Привет, выбери действие", replyMarkup: replyKeyboard);
+        }
+
+
+        public static async Task ShowMainEditMenu(long UserFromId, HabitEditModel habitEditModel)
+        {
+            List<List<InlineKeyboardButton>> keyboard = new List<List<InlineKeyboardButton>>();
+
+            Dictionary<string, string> textCallbackPairs = new Dictionary<string, string>
+            {
+                {"Изменить название", "/EdName"},
+                {"Изменить описание", "/EdDescription" },
+                {"Изменить частоту", "/EdPeriod" },
+                {"Изменить время напоминалки", "/EdNotification" },
+                {"Сохранить", "/Save" },
+                {"Отмена", "/Cancel" },
+            };
+
+
+            foreach (var item in textCallbackPairs)
+            {
+                InlineKeyboardButton button = new InlineKeyboardButton
+                {
+                    Text = item.Key,
+                    CallbackData = item.Value
+                };
+
+                keyboard.Add(new List<InlineKeyboardButton>() { button });
+            }
+            await Program._botClient.SendTextMessageAsync(UserFromId, habitEditModel.ToString(), replyMarkup: new InlineKeyboardMarkup(keyboard));
         }
 
 
