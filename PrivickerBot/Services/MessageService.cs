@@ -53,13 +53,6 @@ namespace PrivickerBot.Services
                 default:
                     break;
             }
-
-
-            /* если ChatState ==2
-             *    идти по switchCase EditingState
-             * 
-             * как вариант habitCreateModel и habitEditModel хранить в User'e, либо добавить еще одну строчку как TestSessions.
-             */
         }
 
         async Task MainMenuStateHandle(Message message, DAL.Models.User user)
@@ -74,7 +67,7 @@ namespace PrivickerBot.Services
             {
                 user.ChatState = ChatState.AddingNewHabit;
                 user.AddingHabitState = AddingHabitState.NameInput;
-                _userRepository.UpdateUser(user);
+                await _userRepository.UpdateUser(user);
                 await _botClient.SendTextMessageAsync(message.From.Id,
                                                         "Введите название привычки:",
                                                         replyMarkup: Helpers.GetKeyboard(new string[] {"Отмена" }));
@@ -87,7 +80,47 @@ namespace PrivickerBot.Services
 
         async Task EditHabitStateHandle(Message message, DAL.Models.User user)
         {
-            await _botClient.SendTextMessageAsync(message.From.Id, "Список привычек:");
+            if (message.Text == "Отмена")
+            {
+                user.AddingHabitState = 0;
+                user.ChatState = 0;
+                user.EditingHabitState = 0;
+
+                await _userRepository.UpdateUser(user);
+
+                await Helpers.ShowMainMenu(message.From.Id);
+                return;
+            }
+
+            switch (user.EditingHabitState)
+            {
+                case EditingHabitState.EditingName:
+                    await _sessionRepository.SetHabitName(message.Text, user);
+                    break;
+                case EditingHabitState.EditingDescription:
+                    await _sessionRepository.SetHabitDescription(message.Text, user);
+                    break;
+                case EditingHabitState.EditingNotificationTime:
+                    await _sessionRepository.SetHabitNotificationTime(default, user);//TO-DO
+                    break;
+                case EditingHabitState.EditingPeriod:
+                    if(int.TryParse(message.Text, out int period))
+                    {
+                        await _sessionRepository.SetHabitPeriod(period, user);
+                    }
+                    else
+                    {
+                        await _botClient.SendTextMessageAsync(message.From.Id, "Ошибка распознавания, введите периодичность в днях:");
+                        return;
+                    }
+                    break;
+                default:
+                    await _botClient.SendTextMessageAsync(message.From.Id, "Используй кнопки последнего меню!");
+                    return;
+            }
+
+            user.EditingHabitState = EditingHabitState.Main;
+            await Helpers.ShowMainEditMenu(user.FromId, await _sessionRepository.GetEditSession(user));
         }
 
         async Task AddingHabitStateHandle(Message message, DAL.Models.User user)
@@ -98,7 +131,7 @@ namespace PrivickerBot.Services
                 user.ChatState = 0;
                 user.EditingHabitState = 0;
 
-                _userRepository.UpdateUser(user);
+                await _userRepository.UpdateUser(user);
 
                 await Helpers.ShowMainMenu(message.From.Id);
                 return;
@@ -161,7 +194,7 @@ namespace PrivickerBot.Services
                 default:
                     break;
             }
-            _userRepository.UpdateUser(user);
+            await _userRepository.UpdateUser(user);
         }
     }
 }

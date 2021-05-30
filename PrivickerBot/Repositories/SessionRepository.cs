@@ -10,10 +10,12 @@ namespace PrivickerBot.Repositories
     class SessionRepository
     {
         private readonly HabitContext _context;
+        private readonly HabitRepository _habitRepository;
 
         public SessionRepository(HabitContext dbContext)
         {
             _context = dbContext;
+            _habitRepository = new HabitRepository(dbContext);
         }
 
         public async Task CreateInputSession(User user)
@@ -23,8 +25,9 @@ namespace PrivickerBot.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<InputSession> GetEditSession(User user, HabitEditModel editModel)
+        public async Task<InputSession> GetNewEditSession(User user, int habitId)
         {
+            HabitEditModel editModel = await _habitRepository.GetEditHabitModel(habitId);
             InputSession session = await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
 
             session.HabitId = editModel.Id;
@@ -40,6 +43,10 @@ namespace PrivickerBot.Repositories
             return session;
         }
 
+        public async Task<InputSession> GetEditSession(User user)
+        {
+            return await _context.Sessions.FirstOrDefaultAsync(s => s.UserId == user.Id);
+        }
 
         public async Task SetHabitName(string name, User user, bool adding = false)
         {

@@ -18,20 +18,30 @@ namespace PrivickerBot.Services
         private readonly ITelegramBotClient _botClient;
         private readonly UserRepository _userRepository;
         private readonly HabitRepository _habitRepository;
+        private readonly SessionRepository _sessionRepository;
 
         CallbackQuery _callback;
         int habitId;
+
         public CallbackQueryService(ITelegramBotClient botClient, HabitContext dbContext)
         {
             _botClient = botClient;
             _userRepository = new UserRepository(dbContext);
             _habitRepository = new HabitRepository(dbContext);
+            _sessionRepository = new SessionRepository(dbContext);
 
             _commandFactory.Add("/get", GetHabitView);
             _commandFactory.Add("/edit", EditHabitView);
             _commandFactory.Add("/delete", DeleteHabitView);
             _commandFactory.Add("/remove", RemoveHabitView);
             _commandFactory.Add("/cancel", CancelView);
+
+            _commandFactory.Add("/edname", EditName);
+            _commandFactory.Add("/eddescription", EditDescription);
+            _commandFactory.Add("/edperiod", EditPeriod);
+            _commandFactory.Add("/ednotification", EditNotification);
+            _commandFactory.Add("/save", SaveEditedHabit);
+
         }
 
         public async Task HandleCallbackQuery(CallbackQuery callbackQuery)
@@ -85,17 +95,82 @@ namespace PrivickerBot.Services
 
         private async Task EditHabitView()
         {
-            //TO-DO
             DAL.Models.User user = await _userRepository.GetUser(_callback.From.Id);
+            InputSession sessionModel = await _sessionRepository.GetNewEditSession(user, habitId);
 
-            HabitEditModel habitEditModel = await _habitRepository.GetEditHabitModel(habitId);
             user.EditingHabitState = EditingHabitState.Main;
             user.ChatState = ChatState.EditingNewHabit;
 
-            await Helpers.ShowMainEditMenu(_callback.From.Id, habitEditModel);
-
-            _userRepository.UpdateUser(user);
+            await _userRepository.UpdateUser(user);
+            await Helpers.ShowMainEditMenu(_callback.From.Id, sessionModel);
         }
+
+        #region EditCallbacks
+
+        private async Task EditName()
+        {
+            DAL.Models.User user = await _userRepository.GetUser(_callback.From.Id);
+            user.EditingHabitState = EditingHabitState.EditingName;
+            await _userRepository.UpdateUser(user);
+
+            await _botClient.SendTextMessageAsync(_callback.From.Id,
+                                                  "Введите новое название привычки:",
+                                                  replyMarkup: Helpers.GetKeyboard(new string[] { "Отмена" }));
+        }
+
+        private async Task EditDescription()
+        {
+            DAL.Models.User user = await _userRepository.GetUser(_callback.From.Id);
+            user.EditingHabitState = EditingHabitState.EditingDescription;
+            await _userRepository.UpdateUser(user);
+
+            await _botClient.SendTextMessageAsync(_callback.From.Id,
+                                                  "Введите новое описание привычки:",
+                                                  replyMarkup: Helpers.GetKeyboard(new string[] { "Отмена" }));
+        }
+
+        private async Task EditPeriod()
+        {
+            DAL.Models.User user = await _userRepository.GetUser(_callback.From.Id);
+            user.EditingHabitState = EditingHabitState.EditingPeriod;
+            await _userRepository.UpdateUser(user);
+
+            await _botClient.SendTextMessageAsync(_callback.From.Id,
+                                                  "Введите новую периодичность привычки(в днях):",
+                                                  replyMarkup: Helpers.GetKeyboard(new string[] { "Отмена" }));
+        }
+
+        private async Task EditNotification()
+        {
+            DAL.Models.User user = await _userRepository.GetUser(_callback.From.Id);
+            user.EditingHabitState = EditingHabitState.EditingNotificationTime;
+            await _userRepository.UpdateUser(user);
+
+            await _botClient.SendTextMessageAsync(_callback.From.Id,
+                                                  "Введите время для напоминания:",
+                                                  replyMarkup: Helpers.GetKeyboard(new string[] { "Отмена" }));
+        }
+
+        private async Task SaveEditedHabit()
+        {
+            DAL.Models.User user = await _userRepository.GetUser(_callback.From.Id);
+            InputSession session = await _sessionRepository.GetEditSession(user);
+            await _habitRepository.EditHabit(
+                new HabitEditModel
+                {
+                    Id = session.HabitId,
+                    Description = session.Description,
+                    LastExercise = session.LastExercise,
+                    Name = session.Name,
+                    NotificationTime = session.NotificationTime,
+                    Period = session.Period
+                }
+            );
+
+            await Helpers.ShowMainMenu(user.FromId);
+        }
+
+        #endregion
 
         private async Task DeleteHabitView()
         {
@@ -134,11 +209,9 @@ namespace PrivickerBot.Services
             user.ChatState = 0;
             user.EditingHabitState = 0;
 
-            _userRepository.UpdateUser(user);
+            await _userRepository.UpdateUser(user);
 
-            //TO-DO return UI to mainMenu
-
-            await _botClient.SendTextMessageAsync(_callback.From.Id, "CancelView через CallbackQueryService");
+            await Helpers.ShowMainMenu(user.FromId);
         }
     }
 }

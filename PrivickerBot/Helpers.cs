@@ -1,4 +1,5 @@
-﻿using PrivickerBot.Models.ViewModel;
+﻿using PrivickerBot.DAL.Models;
+using PrivickerBot.Models.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -52,17 +53,17 @@ namespace PrivickerBot
         }
 
 
-        public static async Task ShowMainEditMenu(long UserFromId, HabitEditModel habitEditModel)
+        public static async Task ShowMainEditMenu(long UserFromId, InputSession inputSession)
         {
             List<List<InlineKeyboardButton>> keyboard = new List<List<InlineKeyboardButton>>();
 
             Dictionary<string, string> textCallbackPairs = new Dictionary<string, string>
             {
-                {"Изменить название", "/EdName"},
-                {"Изменить описание", "/EdDescription" },
-                {"Изменить частоту", "/EdPeriod" },
-                {"Изменить время напоминалки", "/EdNotification" },
-                {"Сохранить", "/Save" },
+                {"Изменить название", "/edname"},
+                {"Изменить описание", "/eddescription" },
+                {"Изменить частоту", "/edperiod" },
+                {"Изменить время напоминалки", "/ednotification" },
+                {"Сохранить", "/save" },
                 {"Отмена", "/Cancel" },
             };
 
@@ -77,7 +78,13 @@ namespace PrivickerBot
 
                 keyboard.Add(new List<InlineKeyboardButton>() { button });
             }
-            await Program._botClient.SendTextMessageAsync(UserFromId, habitEditModel.ToString(), replyMarkup: new InlineKeyboardMarkup(keyboard));
+
+            string session = "Текущее имя привычки: " + inputSession.Name
+                            + "\nТекущее описание: " + inputSession.Description
+                            + "\nПериодичность: " + inputSession.Period.ToString()
+                            + "\nВремя для напоминания: " + inputSession.NotificationTime.ToShortTimeString();
+
+            await Program._botClient.SendTextMessageAsync(UserFromId, session, replyMarkup: new InlineKeyboardMarkup(keyboard));
         }
 
 

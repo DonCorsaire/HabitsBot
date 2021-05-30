@@ -45,15 +45,15 @@ namespace PrivickerBot.Repositories
             return result;
         }
 
-        public void UpdateUser(User userUpdated)
+        public async Task UpdateUser(User userUpdated)
         {
-            User oldUser = _context.Users.FirstOrDefault(u => u.FromId == userUpdated.FromId);
+            User oldUser = await _context.Users.FirstOrDefaultAsync(u => u.FromId == userUpdated.FromId);
             oldUser.Name = userUpdated.Name;
             oldUser.ChatState = userUpdated.ChatState;
             oldUser.AddingHabitState = userUpdated.AddingHabitState;
             oldUser.EditingHabitState = userUpdated.EditingHabitState;
             _context.Entry(oldUser).State = EntityState.Modified;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }
