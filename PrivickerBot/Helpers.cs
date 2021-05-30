@@ -45,7 +45,7 @@ namespace PrivickerBot
 
         public static async Task ShowMainMenu(long UserFromId)
         {
-            ReplyKeyboardMarkup replyKeyboard = GetKeyboard(new string[] { "Просмотреть список", "Добавить новую привычку" });
+            ReplyKeyboardMarkup replyKeyboard = GetKeyboard(new string[] { "Просмотреть список", "Добавить привычку" });
 
 
             await Program._botClient.SendTextMessageAsync(UserFromId, "Привет, выбери действие", replyMarkup: replyKeyboard);

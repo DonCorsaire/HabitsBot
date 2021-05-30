@@ -1,9 +1,8 @@
-﻿using PrivickerBot.DAL.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using PrivickerBot.DAL.Models;
 using PrivickerBot.Models.ViewModel;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace PrivickerBot.Repositories

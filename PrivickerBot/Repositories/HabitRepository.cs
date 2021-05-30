@@ -1,8 +1,8 @@
-﻿using PrivickerBot.DAL.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using PrivickerBot.DAL.Models;
 using PrivickerBot.Models.ViewModel;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -78,7 +78,7 @@ namespace PrivickerBot.Repositories
             habit.Name = model.Name;
             habit.Description = model.Description;
             habit.NotificationTime = model.NotificationTime;
-            _context.Entry(habit).State = System.Data.Entity.EntityState.Modified;
+            _context.Entry(habit).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 

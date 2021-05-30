@@ -60,8 +60,6 @@ namespace PrivickerBot.Services
              * 
              * как вариант habitCreateModel и habitEditModel хранить в User'e, либо добавить еще одну строчку как TestSessions.
              */
-
-            await _botClient.SendTextMessageAsync(message.Chat.Id, "Ответка через MessageService");
         }
 
         async Task MainMenuStateHandle(Message message, DAL.Models.User user)
@@ -75,6 +73,7 @@ namespace PrivickerBot.Services
             else if (message.Text == "Добавить привычку")
             {
                 user.ChatState = ChatState.AddingNewHabit;
+                user.AddingHabitState = AddingHabitState.NameInput;
                 _userRepository.UpdateUser(user);
                 await _botClient.SendTextMessageAsync(message.From.Id,
                                                         "Введите название привычки:",

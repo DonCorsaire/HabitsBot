@@ -63,7 +63,7 @@ namespace PrivickerBot.Services
 
         private async Task GetHabitView()
         {
-            HabitViewModel viewModel = await _habitRepository.GetHabit(1);
+            HabitViewModel viewModel = await _habitRepository.GetHabit(habitId);
 
             InlineKeyboardButton editBtn = new InlineKeyboardButton
             {

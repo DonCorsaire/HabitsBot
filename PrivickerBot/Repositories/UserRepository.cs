@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace PrivickerBot.Repositories
 {
@@ -40,7 +40,7 @@ namespace PrivickerBot.Repositories
                 ChatState = ChatState.Main
             };
 
-            User result = _context.Users.Add(user);
+            User result =  _context.Users.Add(user).Entity;
             await _context.SaveChangesAsync();
             return result;
         }
@@ -52,7 +52,7 @@ namespace PrivickerBot.Repositories
             oldUser.ChatState = userUpdated.ChatState;
             oldUser.AddingHabitState = userUpdated.AddingHabitState;
             oldUser.EditingHabitState = userUpdated.EditingHabitState;
-            _context.Entry(oldUser).State = System.Data.Entity.EntityState.Modified;
+            _context.Entry(oldUser).State = EntityState.Modified;
             _context.SaveChanges();
         }
     }
